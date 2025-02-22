@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react";
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react';
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   Dialog,
@@ -28,9 +30,8 @@ import { Label } from "@/components/ui/label"
 
 
 export default function Home() {
-
+  const router = useRouter();
   const [balance, setBalance] = useState(100.4);
-
   const [wallets, setWallets] = useState([
     {
       "account_id": "nuniqdiuu8198200-12122910je09j",
@@ -89,7 +90,9 @@ export default function Home() {
           <h4 className="text-md ml-3">@harsh</h4>
           <div className="ml-auto flex flex-row gap-2">
               <DialogTrigger asChild>
-                <Button className="w-20">Send</Button>
+              <Link href="/transfer">
+                <Button className="w-20" onClick={() => router.push('/transfer')}>Send</Button>
+                </Link>
               </DialogTrigger>
               <DialogTrigger asChild>
                 <Button className="w-20">Receive</Button>
