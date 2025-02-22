@@ -16,9 +16,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "faker": "^6.6.6",
+    "faker": "^5.5.3",
     "morgan": "^1.10.0",
-    "near-api-js": "^5.0.1",
+    "near-api-js": "^4.0.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

@@ -3,10 +3,11 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import supabase from './database/client.js';
+import { connect, keyStores, KeyPair, utils } from "near-api-js";
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors());
@@ -26,6 +27,10 @@ app.use(morgan("dev"));
 // Simple API route
 app.get("/", (req, res) => {
   res.send("Backend is running!");
+});
+
+app.post("/wallet", async (req, res) => {
+
 });
 
 // Start server
