@@ -1,5 +1,7 @@
 import supabase from './client.js';
+import near from '../near/client.js';
 import { faker } from '@faker-js/faker';
+import { v4 as uuidv4 } from 'uuid';
 
 
 const walletAmounts = [0.1, 0.25, 0.5, 1, 2, 4, 5, 10, 20, 50];
@@ -9,10 +11,11 @@ const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) +
 const generateWallets = (userId) => {
   const walletCount = getRandomInt(5, 10); // Generate between 5 and 10 wallets per user
   const wallets = [];
+  const currentDatetime = new Date().toISOString();
 
   for (let i = 0; i < walletCount; i++) {
-    const privateKey = `${faker.datatype.uuid()}-${currentDatetime}`;
-    const publicKey = `${faker.datatype.uuid()}-${currentDatetime}`;
+    const privateKey = `${uuidv4()}-${currentDatetime}`;
+    const publicKey = `${uuidv4()}-${currentDatetime}`;
     const amount = walletAmounts[getRandomInt(0, walletAmounts.length - 1)];
 
     wallets.push({
@@ -28,9 +31,9 @@ const generateWallets = (userId) => {
 
 
 const generateUserData = () => {
-  const firstName = faker.name.firstName();
-  const lastName = faker.name.lastName();
-  const username = faker.internet.userName();
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+  const username = faker.internet.username();
   const email = faker.internet.email();
   const password = faker.internet.password();
 
