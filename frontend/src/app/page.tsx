@@ -31,7 +31,40 @@ export default function Home() {
 
   const [balance, setBalance] = useState(100.4);
 
-  const [wallets, setWallets] = useState([{
+  const [wallets, setWallets] = useState([
+    {
+      "account_id": "nuniqdiuu8198200-12122910je09j",
+      "balance": 1
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance: 1.5
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance: 0.5
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance
+    },
+    {
+      "account_id": "nuniqdiuu8198200-12122910je09j",
+      "balance": 1
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance: 1.5
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance: 0.5
+    },
+    {
+      account_id: "nuniqdiuu8198200-12122910je09j",
+      balance
+    },
+    {
       "account_id": "nuniqdiuu8198200-12122910je09j",
       "balance": 1
     },
@@ -67,7 +100,7 @@ export default function Home() {
           <p>Balance</p>
           <h3 className="text-5xl font-bold">${balance}</h3>
         </div>
-        <div className="mt-10 flex flex-col gap-5">
+        <div className="mt-10 flex flex-col gap-5 max-h-[70vh] overflow-y-scroll">
           { wallets.map((wallet, i) => (
             <Card className="p-3 px-5">
               <CardHeader className="p-0">
