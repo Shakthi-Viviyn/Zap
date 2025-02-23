@@ -25,7 +25,7 @@ export default function ReceiveDialog({ username }: { username: string }) {
             </DialogHeader>
             <div className="flex flex-col items-center space-x-2 py-10 gap-3">
                 <div className="mb-4">
-                    <QRCodeSVG value={`${window.location.href.split('?')[0]}/sender=${username}`} />
+                    <QRCodeSVG value={`${window.location.href.split('?')[0]}?sender=${username}`} />
                 </div>
                 <div className="grid flex-1 gap-2">
                     <Label htmlFor="link" className="sr-only">
