@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import supabase from './database/client.js';
-import { connect, keyStores, KeyPair, utils } from "near-api-js";
+import { createAccount } from './accounts.js';
+import { createWallet } from './wallet.js';
 
 dotenv.config();
 const app = express();
@@ -14,23 +14,23 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Connect with supabase db
-(async () => {
-    const { data, error } = await supabase.from("users").select("*").limit(1);
-    if (error) {
-      console.error("Supabase connection failed:", error.message);
-    } else {
-      console.log("Supabase connection successful! Sample data:", data);
-    }
-})();
 
 // Simple API route
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-app.post("/wallet", async (req, res) => {
+app.post("/create-account", async (req, res) => {
+  const { firstname, lastname, username, email, password } = req.body;
+  
+  try {
+    const newAccount = await createAccount({ firstname, lastname, username, email, password });
+    const walletId = await createWallet(newAccount.id);
 
+    return res.status(200).json({ success: true, walletId });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Start server

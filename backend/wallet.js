@@ -1,12 +1,12 @@
 import { connect, keyStores, KeyPair, utils } from "near-api-js";
 import dotenv from "dotenv";
-import supabase from "./database/client";
+import supabase from "./database/client.js";
 
 dotenv.config();
 
 const privateKey = process.env.ROOT_PRIVATE_KEY;
 const accountId = process.env.ROOT_ACCOUNT_ID;
-const myKeyStore = new keyStores.KeyStore();
+const myKeyStore = new keyStores.InMemoryKeyStore();
 
 const keyPair = KeyPair.fromString(privateKey);
 await myKeyStore.setKey("testnet", accountId, keyPair);
@@ -21,10 +21,9 @@ const nearConnection = await connect(connectionConfig);
 const rootAccount = await nearConnection.account(accountId);
 
 /*
- Pass in the userId as string
- Pass in the initial amount as number
+ Pass in the accountId as string
 */
-export async function createWallet(userId, initialAmount) {
+export async function createWallet(accountId) {
 
     const newWalletId = Date.now() + ".testnet";
 
@@ -39,43 +38,40 @@ export async function createWallet(userId, initialAmount) {
           new_account_id: newWalletId, // example-account.testnet
           new_public_key: newPublicKey, // ed25519:2ASWc...
         },
-        attachedDeposit: utils.format.parseNearAmount(initialAmount.toString()), // Initial balance for new account in yoctoNEAR
+        attachedDeposit: utils.format.parseNearAmount("0.0"), // Initial empty balance for account in yoctoNEAR
     });
-
-
+    
     if (createAccountResult.status.SuccessValue) {
-        const { error } = supabase.from("wallets").insert([
+        const { data, error } = await supabase.from("wallet").insert(
             {
-                user_id: userId,
-                wallet_id: newWalletId,
-                public_key: newPublicKey,
+                account_id: accountId,
                 private_key: newPrivateKey,
-                amount: initialAmount
+                public_key: newPublicKey,
+                wallet_id: newWalletId
             }
-        ])
-        .select('id');
+        )
+        .select('wallet_id');
 
-        if (!error){
-            return true;
+        if (error){
+            throw new Error(`Error creating wallet: ${error.message}`);
         }
+        return data[0];
     }
-
-    return false;
 }
 
-export async function getWallets(userId, limit = 10, offset = 0) {
+export async function getWallets(accountId, limit = 10, offset = 0) {
 
     let result;
     if (limit == 0){
-        result = await supabase.from("wallets")
+        result = await supabase.from("wallet")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", accountId)
         .limit(limit)
         .offset(offset);
     }else{
-        result = await supabase.from("wallets")
+        result = await supabase.from("wallet")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", accountId)
     }
     
     if (result.error) {
