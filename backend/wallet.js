@@ -46,7 +46,7 @@ export async function createWallet(userId) {
         },
         attachedDeposit: utils.format.parseNearAmount("0"), // Initial empty balance for account in yoctoNEAR
     });
-    
+
     if (createWalletResult.status.SuccessValue) {
         const { error } = await supabase.from("wallet").insert(
             {
@@ -60,12 +60,7 @@ export async function createWallet(userId) {
         if (error){
             throw new Error(`Error creating wallet: ${error.message}`);
         }
-        return {
-            walletId: newWalletId,
-            publicKey: newPublicKey
-        };
     }
-    return null;
 }
 
 export async function getWalletsWithTotalAmt(userId) {
