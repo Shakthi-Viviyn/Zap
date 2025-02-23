@@ -35,9 +35,9 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
         if (senderUsername && receiver && sendAmount) {
             try {
                 const response = await axios.post('http://localhost:8000/api/initiateTransaction', {
-                    senderUsername,
+                    senderUsername,     
                     receiverUsername: receiver,
-                    amount: sendAmount,
+                    amount: sendAmount,  
                 });
 
                 if (response.status === 200) {
