@@ -12,19 +12,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Page() {
 
     const router = useRouter();
 
     const [accountInfo, setAccountInfo] = useState({
-        email: "",
+        username: "",
         password: ""
     });
 
-    function handleAccountCreate(){
-        console.log("Create Account");
-        router.push("/");
+    async function handleAccountCreate(){
+        
+        let resp = await axios.post("/api/signup", accountInfo);
+        if (resp.status === 200){
+            router.push("/");
+            return;
+        }
+        console.log("Failed to create account");
     }
 
     return (
@@ -42,14 +48,14 @@ export default function Page() {
                             <div>
                                 <div className="flex flex-col gap-6">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
+                                        <Label htmlFor="username">Handle</Label>
                                         <Input
-                                            id="email"
-                                            type="email"
-                                            placeholder="m@example.com"
+                                            id="username"
+                                            type="text"
+                                            placeholder="@..."
                                             
-                                            value={accountInfo.email}
-                                            onChange={(e) => setAccountInfo({...accountInfo, email: e.target.value})}
+                                            value={accountInfo.username}
+                                            onChange={(e) => setAccountInfo({...accountInfo, username: e.target.value})}
                                         />
                                     </div>
                                     <div className="grid gap-2">
