@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function ReceiveDialog() {
+export default function ReceiveDialog({ username }: { username: string }) {
 
     return (
         <>
@@ -25,7 +25,7 @@ export default function ReceiveDialog() {
             </DialogHeader>
             <div className="flex flex-col items-center space-x-2 py-10 gap-3">
                 <div className="mb-4">
-                    <QRCodeSVG value="@harsh" />
+                    <QRCodeSVG value={`${window.location.href.split('?')[0]}/sender=${username}`} />
                 </div>
                 <div className="grid flex-1 gap-2">
                     <Label htmlFor="link" className="sr-only">
@@ -35,6 +35,7 @@ export default function ReceiveDialog() {
                         id="link"
                         defaultValue="@harsh"
                         readOnly
+                        value={`@${username}`}
                     />
                 </div>
             </div>

@@ -27,8 +27,7 @@ export default function Page() {
         
         let resp = await axios.post(`http://localhost:8000/api/create-user`, accountInfo);
         if (resp.status === 200){
-            router.push(`/main?username=${accountInfo.username}`);
-            return;
+            router.push(`/login`);
         }
         console.log("Failed to create account");
     }

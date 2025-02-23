@@ -118,10 +118,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ReceiveDialog from "@/components/receiveDialog";
 import SendDialog from "@/components/sendDialog";
 import Image from 'next/image';
+import FundDialog from '@/components/FundDialog';
+import { getAuth } from '../axios-header';
 
 type Wallet = {
   wallet_id: string;
-  amount: number;
+  amount: string;
 };
 
 export default function MainPage() {
@@ -129,19 +131,29 @@ export default function MainPage() {
   const [totalBalance, setTotalBalance] = useState(0);
   const [username, setUsername] = useState("");
   const [openDialogName, setOpenDialogName] = useState("");
+  const [activeWallet, setActiveWallet] = useState<null | Wallet>(null);
+  const [initialHandle, setInitialHandle] = useState("");
   
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Fetch username from query params
-    const username = searchParams.get('username');
-    setUsername(username?.toString() || "User");
+    const senderUsername = searchParams.get('sender');
+    if (senderUsername) {
+      setOpenDialogName("Send");
+      setInitialHandle(senderUsername);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    
+    const username = localStorage.getItem("username");
+    setUsername(username || "User");
 
     // Fetch wallet data from the /api/wallets endpoint
     const fetchWallets = async () => {
       try {
-        const resp = await axios.get('http://localhost:8000/api/wallets');
+        const resp = await axios.get('http://localhost:8000/api/wallets', {headers: getAuth()});
         if (resp.status === 200) {
           setWallets(resp.data.wallets);  // Assuming response contains an array of wallets
           setTotalBalance(resp.data.totalBalance); // Assuming response contains the total balance
@@ -152,13 +164,18 @@ export default function MainPage() {
     };
 
     fetchWallets();
-  }, [searchParams]);
+  }, []);
+
+  function handleWalletClick(i : number){
+    setActiveWallet(wallets[i]);
+    setOpenDialogName("Fund");
+  }
 
   return (
     <div className="p-5">
       {/* Greeting */}
-      <div className="flex flex-col mt-4">
-        <h1 className="text-5xl font-bold">Hi, {username}!</h1>
+      <div className="flex flex-col">
+        <h1 className="text-xl font-bold mt-5">@{username}</h1>
       </div>
 
       {/* Total Balance Card */}
@@ -184,8 +201,8 @@ export default function MainPage() {
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-4">Wallets</h2>
         <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-scroll">
-          {wallets.map((wallet) => (
-            <Card key={wallet.wallet_id} className="p-3 px-5">
+          {wallets.map((wallet, i) => (
+            <Card key={wallet.wallet_id} className="p-3 px-5" onClick={() => handleWalletClick(i)}>
               <CardHeader className="p-0">
                 <CardDescription>{wallet.wallet_id}</CardDescription>
               </CardHeader>
@@ -194,7 +211,6 @@ export default function MainPage() {
                   <div className="flex justify-center items-center">
                     <Image src={"/near.webp"} width={15} height={15} alt="N" />
                   </div>
-                  <p>{wallet.amount}</p>
                   <p>{wallet.amount}</p>
                 </div>
               </CardContent>
@@ -206,13 +222,19 @@ export default function MainPage() {
       {/* Dialogs */}
       <Dialog open={openDialogName === "Receive"} onOpenChange={() => setOpenDialogName("")}>
         <DialogContent className="w-3/4 rounded-lg">
-          <ReceiveDialog />
+          <ReceiveDialog username={username}/>
         </DialogContent>
       </Dialog>
 
       <Dialog open={openDialogName === "Send"} onOpenChange={() => setOpenDialogName("")}>
         <DialogContent className="w-3/4 rounded-lg">
-          <SendDialog setOpenDialogName={setOpenDialogName} />
+          <SendDialog setOpenDialogName={setOpenDialogName} initialHandle={initialHandle}/>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDialogName === "Fund"} onOpenChange={() => setOpenDialogName("")}>
+        <DialogContent className="w-3/4 rounded-lg">
+          <FundDialog wallet={activeWallet}/>
         </DialogContent>
       </Dialog>
     </div>

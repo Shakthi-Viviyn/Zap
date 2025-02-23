@@ -32,7 +32,7 @@ export default function FundDialog({ wallet }: { wallet: Wallet | null }) {
     }
 
     function handleRedirect(){
-        window.open("https://example.com", "_blank");
+        window.open("https://near-faucet.io", "_blank");
     }
 
     if (wallet === null) {
@@ -58,6 +58,7 @@ export default function FundDialog({ wallet }: { wallet: Wallet | null }) {
                 <div className="mb-4">
                     <QRCodeSVG value={"https://near-faucet.io"}/>
                 </div>
+                <Button className="mt-1" onClick={handleRedirect}>Go to Exchange</Button>
                 <div className="flex items-center space-x-2">
                     <div className="grid flex-1 gap-2">
                         <Label htmlFor="wallet_id" className="sr-only">

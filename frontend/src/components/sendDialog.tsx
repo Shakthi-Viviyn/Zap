@@ -22,14 +22,13 @@ import { useSearchParams } from "next/navigation";
 import axios from "axios";
   
 
-export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: any }) {
+export default function SendDialog({ setOpenDialogName, initialHandle } : { setOpenDialogName: any, initialHandle: string }) {
 
     const [sendAmount, setSendAmount] = useState<number | null>(null);
-    const [receiver, setReceiver] = useState<string>("");
-    const searchParams = useSearchParams();
-    const senderUsername = searchParams.get('username'); 
+    const [receiver, setReceiver] = useState<string>(initialHandle);
     const [sendFlowPage, setSendFlowPage] = useState(1);
     const [transactionId, setTransactionId] = useState<string | null>(null);
+    const senderUsername = localStorage.getItem('username');
 
     const handleInitiateTransaction = async () => {
         if (senderUsername && receiver && sendAmount) {
