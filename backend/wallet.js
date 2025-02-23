@@ -48,20 +48,26 @@ export async function createWallet(userId) {
     });
 
     if (createWalletResult.status.SuccessValue) {
-        const { error } = await supabase.from("wallet").insert(
+
+        console.log("Wallet was createed successfully");
+        console.log(userId, newPrivateKey, newPublicKey, newWalletId);
+
+        const { data, error } = await supabase.from("wallet").insert(
             {
                 user_id: userId,
                 private_key: newPrivateKey,
                 public_key: newPublicKey,
                 wallet_id: newWalletId
             }
-        )
+        ).select("user_id, wallet_id");
 
         if (error){
             throw new Error(`Error creating wallet: ${error.message}`);
         }
+
+        return data[0];
     }
-    return "Success";
+    throw new Error(`Error creating wallet: ${createWalletResult.status.FailureValue}`);
 }
 
 export async function getWalletsWithTotalAmt(userId) {
@@ -114,8 +120,6 @@ export async function splitWallet(walletId, difference) {
 
     const { data, error } = await supabase.from("wallet").select("*").eq("wallet_id", walletId);
 
-    console.log(data);
-    console.log("-----------------");
     if (error) {
         throw new Error(`Error getting wallet keys for splitting: ${error.message}`);
     }
@@ -132,12 +136,8 @@ export async function splitWallet(walletId, difference) {
     const userWallet = await nearConnection.account(walletId);
 
     console.log(userWallet);
-    console.log("-----------------");
 
     const newUserWallet = await createWallet(userId);
-
-    console.log(newUserWallet);
-    console.log("-----------------");
 
     if (newUserWallet == null) {
         throw new Error(`Error creating new wallet.`);
@@ -145,7 +145,7 @@ export async function splitWallet(walletId, difference) {
 
     // Send NEAR tokens to another user
     const sendTokensResult = await userWallet.sendMoney(
-        newUserWallet.walletId, // Receiver wallet ID
+        newUserWallet.wallet_id, // Receiver wallet ID
         utils.format.parseNearAmount(difference.toString()), // Amount being sent in yoctoNEAR
     );
     console.log(sendTokensResult);

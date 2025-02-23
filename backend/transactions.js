@@ -45,7 +45,7 @@ export async function createTransaction(senderId, receiverId, targetAmount) {
     }
     return {
         "will_pay_fee": willPayFee,
-        "transaction_id": 24
+        "transaction_id": data[0].id
     }
 }
 

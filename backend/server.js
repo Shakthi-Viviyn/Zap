@@ -133,8 +133,8 @@ app.get("/api/wallets", async (req, res) => {
 app.post("/api/create-wallet", async (req, res) => {
   const { userId } = req.body;
   try {
-    const { walletId } = await createWallet(userId);
-    console.log(walletId);
+    const { wallet_id } = await createWallet(userId);
+    console.log(wallet_id);
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
