@@ -171,18 +171,25 @@ export default function MainPage() {
     setOpenDialogName("Fund");
   }
 
+  function handleLogout(){
+    localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    router.push("/login");
+  }
+
   return (
     <div className="p-5">
       {/* Greeting */}
-      <div className="flex flex-col">
-        <h1 className="text-xl font-bold mt-5">@{username}</h1>
+      <div className="flex flex-row items-center justify-between pt-3">
+        <h1 className="text-xl font-bold">@{username}</h1>
+        <Button className="" onClick={handleLogout}>Logout</Button>
       </div>
 
       {/* Total Balance Card */}
       <div className="mt-10 flex justify-center">
-        <Card className="w-96">
+        <Card className="w-96 py-4">
           <CardHeader className="p-0">
-            <CardDescription className="text-center">Total Balance</CardDescription>
+            <CardDescription className="text-center mt-4">Total Balance</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-4">
             <div className="flex items-center gap-2">
@@ -190,7 +197,7 @@ export default function MainPage() {
               <h3 className="text-3xl font-bold">{totalBalance}</h3>
             </div>
             <div className="mt-4 flex flex-row gap-2 justify-center">
-              <Button className="w-1/2" onClick={() => setOpenDialogName("Send")}>Send</Button>
+              <Button className="w-1/2" onClick={() => setOpenDialogName("Send")} disabled={totalBalance == 0}>Send</Button>
               <Button className="w-1/2" onClick={() => setOpenDialogName("Receive")}>Receive</Button>
             </div>
           </CardContent>

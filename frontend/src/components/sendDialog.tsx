@@ -18,7 +18,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { useSearchParams } from "next/navigation";
 import axios from "axios";
   
 
@@ -27,8 +26,9 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
     const [sendAmount, setSendAmount] = useState<number | null>(null);
     const [receiver, setReceiver] = useState<string>(initialHandle);
     const [sendFlowPage, setSendFlowPage] = useState(1);
-    const [transactionId, setTransactionId] = useState<string | null>(null);
     const senderUsername = localStorage.getItem('username');
+    const [transactionId, setTransactionId] = useState<string | null>(null);
+    const [willPayFee, setWillPayFee] = useState<boolean>(false);
 
     const handleInitiateTransaction = async () => {
         if (senderUsername && receiver && sendAmount) {
@@ -40,9 +40,11 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
                 });
 
                 if (response.status === 200) {
-                    const { transactionFee, transactionId } = response.data;
+                    const { will_pay_fee, transaction_id } = response.data;
                     setTransactionId(transactionId); // Store transaction ID
-                    console.log('Transaction initiated:', transactionId, 'Transaction Fee:', transactionFee);
+                    console.log('Transaction initiated:', transactionId);
+                    setTransactionId(transaction_id);
+                    setWillPayFee(will_pay_fee);
                     setSendFlowPage(2); // Move to the confirmation page
                 } else {
                     console.error('Error initiating transaction:', response.data);
@@ -90,7 +92,7 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
                 <div className="flex flex-col items-center space-x-2">
                 <div className="mid-section flex flex-col items-center justify-center flex-grow py-10 gap-10">
                     <div className="flex items-center border border-gray-300 rounded-lg p-1 w-full max-w-md text-base shadow-sm">
-                        <p className="ml-2 text-lg text-slate-400">Reciever</p>
+                        <p className="ml-2 text-lg text-slate-400">@</p>
                         <Input type="text" className="border-none outline-none shadow-none text-xl" value={receiver} onChange={(e) => setReceiver(e.target.value)}/>
                     </div>
                     <div className="flex items-center border border-gray-300 rounded-lg p-1 w-full max-w-md text-base shadow-sm">
@@ -126,7 +128,11 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
                         <CardContent>
                             <p>Token: {sendAmount}</p>
                             <p>Receiver: {receiver}</p>
-                            <p className="mt-1 text-xs">Note: The actual transferred amount may differ due to transaction fees.</p>
+                            {
+                                willPayFee && (
+                                    <p className="mt-5 text-xs">Note: The actual transferred amount may differ due to transaction fees.</p>
+                                )
+                            }
                         </CardContent>
                     </Card>
                 </div>
