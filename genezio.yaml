@@ -1,0 +1,25 @@
+backend:
+    functions:
+        - entry: server.js
+          handler: handler
+          name: express
+          path: .
+          type: httpServer
+    language:
+        name: js
+        runtime: nodejs20.x
+    path: backend
+    scripts:
+        deploy:
+            - npm install
+        local:
+            - npm install
+name: Zap
+nextjs:
+    packageManager: npm
+    path: ./frontend/
+    scripts:
+        deploy:
+            - npm install
+region: us-east-1
+yamlVersion: 2
