@@ -83,8 +83,8 @@ app.post("/api/initiateTransaction", async (req, res) => {
   try {
     const senderUser = await getUserByUsername(senderUsername);
     const receiverUser = await getUserByUsername(receiverUsername);
-    const transactionId = await createTransaction(senderUser.id, receiverUser.id, amount);
-    return res.status(200).json({ transactionFee: 0, transactionId });
+    const result = await createTransaction(senderUser.id, receiverUser.id, amount);
+    return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

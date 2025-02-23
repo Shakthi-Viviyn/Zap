@@ -16,6 +16,7 @@ export async function createTransaction(senderId, receiverId, targetAmount) {
     let difference = walletSum - targetAmount;
 
     let transaction_info;
+    let willPayFee = false;
     if (difference > 0) {
         let walletToSplit = wallets.pop();
         transaction_info = {
@@ -26,6 +27,7 @@ export async function createTransaction(senderId, receiverId, targetAmount) {
             "receiver_user_id": receiverId,
             "transaction_amount": targetAmount
         }
+        willPayFee = true;
     }else{
         transaction_info = {
             "walletToSplit": "",
@@ -41,7 +43,10 @@ export async function createTransaction(senderId, receiverId, targetAmount) {
     if (error) {
         throw new Error(`Error occured: ${error.message}`);
     }
-    return data[0].id;
+    return {
+        "will_pay_fee": willPayFee,
+        "transaction_id": 24
+    }
 }
 
 export async function commitTransaction(transactionId){
