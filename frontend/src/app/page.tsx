@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { useState } from "react";
 import Image from 'next/image'
-import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -27,6 +26,8 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import ReceiveDialog from "@/components/receiveDialog";
+import SendDialog from "@/components/sendDialog";
 
 
 export default function Home() {
@@ -83,20 +84,15 @@ export default function Home() {
     }
   ]);
 
+  const [openDialogName, setOpenDialogName] = useState("");
+
   return (
     <div className="p-5">
-      <Dialog>
         <div className="flex flex-row items-center">
           <h4 className="text-md ml-3">@harsh</h4>
           <div className="ml-auto flex flex-row gap-2">
-              <DialogTrigger asChild>
-              <Link href="/transfer">
-                <Button className="w-20" onClick={() => router.push('/transfer')}>Send</Button>
-                </Link>
-              </DialogTrigger>
-              <DialogTrigger asChild>
-                <Button className="w-20">Receive</Button>
-              </DialogTrigger>
+                <Button className="w-20" onClick={() => setOpenDialogName("Send")}>Send</Button>
+                <Button className="w-20" onClick={() => setOpenDialogName("Receive")}>Receive</Button>
           </div>
         </div>
         <div className="mt-6 ml-3 flex flex-col justify-center gap-1">
@@ -121,37 +117,16 @@ export default function Home() {
             </Card>
           ))}
         </div>
-        <DialogContent className="w-3/4 rounded-lg">
-          <DialogHeader className="flex flex-col items-start">
-            <DialogTitle>Your QR</DialogTitle>
-            <DialogDescription>
-              Tell the sender to scan this QR code to send you money
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center space-x-2">
-            <div className="mb-4">
-              <QRCodeSVG value="@harsh" />
-            </div>
-            <div className="grid flex-1 gap-2">
-              <Label htmlFor="link" className="sr-only">
-                Handle
-              </Label>
-              <Input
-                id="link"
-                defaultValue="@harsh"
-                readOnly
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex justify-start">
-            <DialogClose asChild>
-              <Button type="button" className="w-20">
-                Close
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={openDialogName === "Receive"} onOpenChange={() => setOpenDialogName("")}>
+          <DialogContent className="w-3/4 rounded-lg">
+            <ReceiveDialog />
+          </DialogContent>
+        </Dialog>
+        <Dialog open={openDialogName === "Send"} onOpenChange={() => setOpenDialogName("")}>
+          <DialogContent className="w-3/4 rounded-lg">
+            <SendDialog setOpenDialogName={setOpenDialogName}/>
+          </DialogContent>
+        </Dialog>
     </div>
   )
 }
