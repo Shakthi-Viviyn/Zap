@@ -12,7 +12,7 @@ export default function Home() {
         <h1 className="text-5xl font-bold text-gray-800 drop-shadow-md leading-tight">
           Welcome  
           <br />
-          to<span className="text-blue-600">Zap!</span>
+          to<span className="text-blue-600"> Zap!</span>
         </h1>
         <p className="text-lg text-gray-600 mt-4 drop-shadow-sm">
           Making your crypt easier.

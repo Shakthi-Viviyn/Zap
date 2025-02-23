@@ -19,7 +19,7 @@ export default function Page() {
     const router = useRouter();
 
     const [loginInfo, setLoginInfo] = useState({
-        email: "",
+        username: "",
         password: ""
     });
 
@@ -47,13 +47,13 @@ export default function Page() {
                             <div>
                                 <div className="flex flex-col gap-6">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
+                                        <Label htmlFor="username">Username</Label>
                                         <Input
-                                            id="email"
-                                            type="email"
-                                            placeholder="eg. john@example.com"
-                                            value={loginInfo.email}
-                                            onChange={(e) => setLoginInfo({...loginInfo, email: e.target.value})}
+                                            id="username"
+                                            type="username"
+                                            placeholder="eg. JohnDoe12"
+                                            value={loginInfo.username}
+                                            onChange={(e) => setLoginInfo({...loginInfo, username: e.target.value})}
                                         />
                                     </div>
                                     <div className="grid gap-2">
