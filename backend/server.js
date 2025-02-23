@@ -36,7 +36,7 @@ app.post("/create-account", async (req, res) => {
 app.post("/transfer", async (req, res) => {
   const { sender, reciever, amount } = req.body;
   try {
-    const transactionFee = determineTransferDistribution(sender, amount);
+    const transactionFee = determineTransferDistribution(sender, reciever, amount);
 
     return res.status(200).json({ success: true, transactionFee});
   } catch (error) {
