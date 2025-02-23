@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import axios from "axios";
 
 export default function Page() {
 
@@ -22,9 +23,13 @@ export default function Page() {
         password: ""
     });
 
-    function handleLogin(){
-        console.log("Login");
-        router.push("/");
+    async function handleLogin(){
+        let resp = await axios.post(`http://localhost:8000/api/login`, loginInfo);
+        if (resp.status === 200){
+            router.push("/main");
+            return;
+        }
+        console.log("Failed to create account");
     }
 
     return (
@@ -35,7 +40,7 @@ export default function Page() {
                         <CardHeader>
                             <CardTitle className="text-2xl">Login</CardTitle>
                             <CardDescription>
-                                Enter your email below to login to your account
+                                Enter your info below to access your account
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -46,7 +51,7 @@ export default function Page() {
                                         <Input
                                             id="email"
                                             type="email"
-                                            placeholder="m@example.com"
+                                            placeholder="eg. john@example.com"
                                             value={loginInfo.email}
                                             onChange={(e) => setLoginInfo({...loginInfo, email: e.target.value})}
                                         />
@@ -58,8 +63,8 @@ export default function Page() {
                                         <Input 
                                             id="password" 
                                             type="password" 
-                                            value={loginInfo.email}
-                                            onChange={(e) => setLoginInfo({...loginInfo, email: e.target.value})} 
+                                            value={loginInfo.password}
+                                            onChange={(e) => setLoginInfo({...loginInfo, password: e.target.value})} 
                                         />
                                     </div>
                                     <Button type="submit" className="w-full" onClick={handleLogin}>
