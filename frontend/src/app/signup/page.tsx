@@ -25,9 +25,9 @@ export default function Page() {
 
     async function handleAccountCreate(){
         
-        let resp = await axios.post("/api/signup", accountInfo);
+        let resp = await axios.post(`http://localhost:8000/api/create-user`, accountInfo);
         if (resp.status === 200){
-            router.push("/");
+            router.push("/main");
             return;
         }
         console.log("Failed to create account");
@@ -48,11 +48,11 @@ export default function Page() {
                             <div>
                                 <div className="flex flex-col gap-6">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="username">Handle</Label>
+                                        <Label htmlFor="username">Username</Label>
                                         <Input
                                             id="username"
                                             type="text"
-                                            placeholder="@..."
+                                            placeholder="eg. JohnDoe12"
                                             
                                             value={accountInfo.username}
                                             onChange={(e) => setAccountInfo({...accountInfo, username: e.target.value})}
