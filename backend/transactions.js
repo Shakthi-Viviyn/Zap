@@ -3,21 +3,21 @@ import { getWallets, splitWallet, fetchWalletBalances, getWalletsForTransfer } f
 
 export async function createTransaction(senderId, receiverId, targetAmount) {
 
-    let walletIds = await getWallets(senderId);
-    let { wallets: walletsWithAmount, totalAmount } = await fetchWalletBalances(walletIds);
-    console.log(walletsWithBalance);
+    let wallets = await getWallets(senderId);
+    let totalAmount;
+    ({ wallets, totalAmount } = await fetchWalletBalances(wallets));
 
     if (totalAmount < targetAmount) {
         throw new Error(`Insufficient funds in user account.`);
     }
 
-    let { wallets, walletSum } = getWalletsForTransfer(walletsWithAmount, targetAmount);
+    let walletSum;
+    ({ wallets, walletSum } = getWalletsForTransfer(wallets, targetAmount));
     let difference = walletSum - targetAmount;
 
     let transaction_info;
     if (difference > 0) {
         let walletToSplit = wallets.pop();
-        console.log("Wallet to split: ", walletToSplit);
         transaction_info = {
             "walletToSplit": walletToSplit,
             "difference": difference,
@@ -57,6 +57,8 @@ export async function commitTransaction(transactionId){
     let walletIdsArray = transaction_info.wallets_data;
     let receiverUserId = transaction_info.receiver_user_id;
 
+    console.log(walletToSplit, difference, walletIdsArray, receiverUserId);
+
     if (walletToSplit != ""){
         await splitWallet(walletToSplit, difference);
         walletIdsArray.push(walletToSplit);
@@ -66,5 +68,4 @@ export async function commitTransaction(transactionId){
     if (walletError) {
         throw new Error(`Error updating wallets: ${walletError.message}`);
     }
-    return "Success";
 }

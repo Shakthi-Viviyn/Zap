@@ -31,7 +31,7 @@ const rootWallet = await nearConnection.account(rootWalletId);
 */
 export async function createWallet(userId) {
 
-    const newWalletId = Date.now() + ".testnet";
+    const newWalletId = Date.now() + "-zap.testnet";
 
     const newKeyPair = KeyPair.fromRandom("ed25519");
     const newPublicKey = newKeyPair.getPublicKey().toString();
@@ -53,8 +53,7 @@ export async function createWallet(userId) {
                 user_id: userId,
                 private_key: newPrivateKey,
                 public_key: newPublicKey,
-                wallet_id: newWalletId,
-                amount: 0
+                wallet_id: newWalletId
             }
         )
 
@@ -69,7 +68,7 @@ export async function createWallet(userId) {
     return null;
 }
 
-export async function getWallets(userId) {
+export async function getWalletsWithTotalAmt(userId) {
 
     let { error, data } = await supabase.from("wallet")
         .select("wallet_id")
@@ -78,7 +77,12 @@ export async function getWallets(userId) {
     if (error){
         throw new Error(`Error getting wallets: ${error.message}`);
     }
-    return fetchWalletBalances(data);;
+    return fetchWalletBalances(data);
+}
+
+export async function getWallets(userId){
+    let { wallets } = await getWalletsWithTotalAmt(userId);
+    return wallets;
 }
 
 function cleanNearAmount(amount) {
@@ -91,7 +95,7 @@ function cleanNearAmount(amount) {
 /* returns balance of a single wallet as a float number */
 export async function getWalletBalanceFromChain(walletId) {
     const wallet = await storeLessConnection.account(walletId);
-    const nearAmount = utils.format.formatNearAmount((await wallet.getAccountBalance()).available);
+    const nearAmount = utils.format.formatNearAmount((await wallet.getAccountBalance()).total);
     return cleanNearAmount(nearAmount);
 }
 
@@ -115,7 +119,7 @@ export async function splitWallet(walletId, difference) {
     const { data, error } = await supabase.from("wallet").select("*").eq("wallet_id", walletId);
 
     if (error) {
-        throw new Error(`Error splitting wallet: ${error.message}`);
+        throw new Error(`Error getting wallet keys for splitting: ${error.message}`);
     }
 
     const wallet = data[0];
@@ -128,6 +132,7 @@ export async function splitWallet(walletId, difference) {
     const nearConnection = await connect(connectionConfig);
 
     const userWallet = await nearConnection.account(walletId);
+
     const newUserWallet = await createWallet(userId);
 
     if (newUserWallet == null) {
@@ -136,13 +141,12 @@ export async function splitWallet(walletId, difference) {
 
     // Send NEAR tokens to another user
     const sendTokensResult = await userWallet.sendMoney(
-        newUserWallet.wallet_id, // Receiver wallet ID
+        newUserWallet.walletId, // Receiver wallet ID
         utils.format.parseNearAmount(difference.toString()), // Amount being sent in yoctoNEAR
     );
 
-    if (sendTokensResult.transaction_outcome.outcome.status.SuccessValue) {
-        return "Success";
-    }
+    if ("SuccessValue" in sendTokensResult.status) return;
+    
     throw new Error(`Error splitting wallet: ${sendTokensResult.transaction_outcome.outcome.status.FailureValue}`);
 }
 
@@ -156,7 +160,7 @@ export function getWalletsForTransfer(wallets, targetAmount) {
         if (total >= targetAmount) break; // Stop once we reach/exceed the target
 
         selectedWallets.push(wallet_id);
-        total += amount;
+        total += parseFloat(amount);
     }
 
     return { wallets: selectedWallets, walletSum: total };
