@@ -29,7 +29,7 @@ export async function createAccount({ firstname, lastname, username, email, pass
     return data[0];
 }
 
-export function determineTransferDistribution(senderId, targetAmount) {
+export async function determineTransferDistribution(senderId, targetAmount) {
     const currAmount = getAmount(senderId);
     if (currAmount < targetAmount) {
         throw new Error(`Insufficient funds in account.`);
@@ -38,11 +38,19 @@ export function determineTransferDistribution(senderId, targetAmount) {
     let wallet_data = getWallets(senderId);
     let {wallets, walletSum} = get_wallets_for_transfer(wallet_data, targetAmount);
     let difference = walletSum - targetAmount;
-    if (difference > 0){
-        let walletToSplit = wallets.pop();
-        wallets.push(splitWallet(walletToSplit, difference));
+
+    let walletToSplit = wallets.pop();
+    let transaction_info = {
+        "walletToSplit": walletToSplit,
+        "difference": difference,
+        "wallets_data": wallets
     }
-    return wallets;
+
+    const {data, error} = await supabase.from("transaction").insert({transaction_info: transaction_info}).select("id");
+    if (error) {
+        throw new Error(`Error occured: ${error.message}`);
+    }
+    return data[0];
 }
 
 async function getAmount(senderId) {
