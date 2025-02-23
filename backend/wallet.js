@@ -4,12 +4,12 @@ import supabase from "./database/client.js";
 
 dotenv.config();
 
-const privateKey = process.env.ROOT_PRIVATE_KEY;
-const rootAccountId = process.env.ROOT_ACCOUNT_ID;
+const rootPrivateKey = process.env.ROOT_PRIVATE_KEY;
+const rootWalletId = process.env.ROOT_WALLET_ID;
 const myKeyStore = new keyStores.InMemoryKeyStore();
 
-const keyPair = KeyPair.fromString(privateKey);
-await myKeyStore.setKey("testnet", accountId, keyPair);
+const keyPair = KeyPair.fromString(rootPrivateKey);
+await myKeyStore.setKey("testnet", rootWalletId, keyPair);
 
 const connectionConfig = {
     networkId: "testnet",
@@ -23,12 +23,12 @@ const storeLessConnection = await connect({
 });
 
 const nearConnection = await connect(connectionConfig);
-const rootAccount = await nearConnection.account(rootAccountId);
+const rootWallet = await nearConnection.account(rootWalletId);
 
 /*
- Pass in the accountId as string
+ Pass in the userId as string
 */
-export async function createWallet(accountId) {
+export async function createWallet(userId) {
 
     const newWalletId = Date.now() + ".testnet";
 
@@ -36,7 +36,7 @@ export async function createWallet(accountId) {
     const newPublicKey = newKeyPair.getPublicKey().toString();
     const newPrivateKey = newKeyPair.toString();
 
-    const createAccountResult = await rootAccount.functionCall({
+    const createWalletResult = await rootWallet.functionCall({
         contractId: "testnet",
         methodName: "create_account",
         args: {
@@ -46,13 +46,14 @@ export async function createWallet(accountId) {
         attachedDeposit: utils.format.parseNearAmount("0.0"), // Initial empty balance for account in yoctoNEAR
     });
     
-    if (createAccountResult.status.SuccessValue) {
-        const { data, error } = await supabase.from("wallet").insert(
+    if (createWalletResult.status.SuccessValue) {
+        const { error } = await supabase.from("wallet").insert(
             {
-                account_id: accountId,
+                user_id: userId,
                 private_key: newPrivateKey,
                 public_key: newPublicKey,
-                wallet_id: newWalletId
+                wallet_id: newWalletId,
+                amount: 0
             }
         )
 
@@ -60,20 +61,19 @@ export async function createWallet(accountId) {
             throw new Error(`Error creating wallet: ${error.message}`);
         }
         return {
-            account_id: accountId,
-            wallet_id: newWalletId,
-            private_key: newPrivateKey,
-            public_key: newPublicKey
+            userId,
+            walletId: newWalletId,
+            publicKey: newPublicKey
         };
     }
     return null;
 }
 
-export async function getWallets(accountId, limit = 10, offset = 0) {
+export async function getWallets(userId, limit = 10, offset = 0) {
 
-    let { error, data} = await supabase.from("wallet")
+    let { error, data } = await supabase.from("wallet")
     .select("wallet_id, amount")
-    .eq("account_id", accountId)
+    .eq("user_id", userId)
 
     if (error){
         throw new Error(`Error getting wallets: ${error.message}`);
@@ -89,8 +89,8 @@ export async function getWalletBalanceFromChain(walletId) {
 }
 
 /* returns the new total balance after syncing blockchain balances of all wallets belonging to user down to the DB */
-export async function refreshAllWallets(accountId){
-    const wallets = await getWallets(accountId);
+export async function refreshAllWallets(userId){
+    const wallets = await getWallets(userId);
     let newBalance = 0;
     await Promise.all(wallets.map(async (wallet) => {
             const balance = await getWalletBalanceFromChain(wallet.wallet_id);
@@ -101,9 +101,9 @@ export async function refreshAllWallets(accountId){
             newBalance += balance;
         }
     ));
-    const { error } = await supabase.from("account").update({ total_amount: newBalance }).eq("id", accountId);
+    const { error } = await supabase.from("user").update({ total_amount: newBalance }).eq("id", userId);
     if (error) {
-        throw new Error(`Error updating account: ${error.message}`);
+        throw new Error(`Error updating user: ${error.message}`);
     }
     return newBalance;
 }
@@ -117,7 +117,7 @@ export async function splitWallet(walletId, difference) {
     }
 
     const wallet = data[0];
-    const userAccountId = wallet.account_id;
+    const userId = wallet.user_id;
     const newAmount = wallet.amount - difference;
 
     const keyPair = KeyPair.fromString(wallet.private_key);
@@ -127,15 +127,15 @@ export async function splitWallet(walletId, difference) {
     const nearConnection = await connect(connectionConfig);
 
     const userWallet = await nearConnection.account(walletId);
-    const newUserWallet = await createWallet(userAccountId);
+    const newUserWallet = await createWallet(userId);
 
     if (newUserWallet == null) {
         throw new Error(`Error creating new wallet.`);
     }
 
-    // Send NEAR tokens to another account
+    // Send NEAR tokens to another user
     const sendTokensResult = await userWallet.sendMoney(
-        newUserWallet.wallet_id, // Receiver account
+        newUserWallet.wallet_id, // Receiver wallet ID
         utils.format.parseNearAmount(difference.toString()), // Amount being sent in yoctoNEAR
     );
 
@@ -143,7 +143,7 @@ export async function splitWallet(walletId, difference) {
         await supabase.from("wallet").update({ amount: newAmount }).eq("wallet_id", walletId);
         await supabase.from("wallet").insert(
             {
-                account_id: userAccountId,
+                user_id: userId,
                 private_key: newUserWallet.private_key,
                 public_key: newUserWallet.public_key,
                 wallet_id: newUserWallet.wallet_id,

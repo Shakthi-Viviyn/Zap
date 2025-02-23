@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { createAccount, determineTransferDistribution, getAccount, getAccountByUsername, getAccountId } from './accounts.js';
+import { createUser, determineTransferDistribution, getUser, getUserByUsername, getUserId } from './users.js';
 import { createWallet, getWallets, refreshAllWallets } from './wallet.js';
 import { commitTransaction } from './transactions.js';
 
@@ -21,11 +21,11 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-app.post("/api/create-account", async (req, res) => {
+app.post("/api/create-user", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const newAccountId = await createAccount(username, password);
-    await createWallet(newAccountId);
+    const newUserId = await createUser(username, password);
+    await createWallet(newUserId);
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
@@ -35,8 +35,8 @@ app.post("/api/create-account", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const account = await getAccountByUsername(username);
-    if (account.password !== password) {
+    const user = await getUserByUsername(username);
+    if (user.password !== password) {
       return res.status(401).json({ success: false, error: "Invalid credentials" });
     }
     return res.status(200).json({ success: true });
@@ -48,9 +48,9 @@ app.post("/api/login", async (req, res) => {
 app.post("/initiateTransaction", async (req, res) => {
   const { senderUsername, receiverUsername, amount } = req.body;
   try {
-    const senderAccount = await getAccountByUsername(senderUsername);
-    const receiverAccount = await getAccountByUsername(receiverUsername);
-    const transactionId = determineTransferDistribution(senderAccount.id, receiverAccount.id, amount);
+    const senderUser = await getUserByUsername(senderUsername);
+    const receiverUser = await getUserByUsername(receiverUsername);
+    const transactionId = determineTransferDistribution(senderUser.id, receiverUser.id, amount);
 
     return res.status(200).json({ transactionFee: 0, transactionId});
   } catch (error) {
@@ -61,7 +61,6 @@ app.post("/initiateTransaction", async (req, res) => {
 app.post("/api/commitTransaction", async (req, res) => {
   const { transactionId, username } = req.body;
   try {
-    const account = await getAccountByUsername(username);
     await commitTransaction(transactionId);
     return res.status(200).json();
   } catch (error) {
@@ -72,8 +71,8 @@ app.post("/api/commitTransaction", async (req, res) => {
 app.get("/api/totalBalanace", async (req, res) => {
   const { username } = req.body;
   try {
-    const account = await getAccountByUsername(username);
-    return res.status(200).json({ totalBalance: account.total_balance });
+    const user = await getUserByUsername(username);
+    return res.status(200).json({ totalBalance: user.total_balance });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -82,8 +81,8 @@ app.get("/api/totalBalanace", async (req, res) => {
 app.get("/api/getAllWallets", async (req, res) => {
   const { username } = req.body;
   try {
-    const account = await getAccountByUsername(username);
-    const wallets = await getWallets(account.id);
+    const user = await getUserByUsername(username);
+    const wallets = await getWallets(user.id);
     return res.status(200).json(wallets);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -93,8 +92,8 @@ app.get("/api/getAllWallets", async (req, res) => {
 app.get("/api/refreshAllWallets", async (req, res) => {
   const { username } = req.body;
   try {
-    const account = await getAccountByUsername(username);
-    const newBalance = await refreshAllWallets(account.id);
+    const user = await getUserByUsername(username);
+    const newBalance = await refreshAllWallets(user.id);
     return res.status(200).json({ wallets, newBalance });
   } catch (error) {
     return res.status(500).json({ error: error.message });
