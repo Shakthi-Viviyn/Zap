@@ -84,6 +84,7 @@ export default function MainPage() {
                     <Image src={"/near.webp"} width={15} height={15} alt="N" />
                   </div>
                   <p>{wallet.amount}</p>
+                  <p>{wallet.amount}</p>
                 </div>
               </CardContent>
             </Card>
