@@ -18,18 +18,67 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { useSearchParams } from "next/navigation";
+import axios from "axios";
   
 
 export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: any }) {
 
     const [sendAmount, setSendAmount] = useState<number | null>(null);
-    const [handle, setHandle] = useState<string>("");
-
+    const [receiver, setReceiver] = useState<string>("");
+    const searchParams = useSearchParams();
+    const senderUsername = searchParams.get('username'); 
     const [sendFlowPage, setSendFlowPage] = useState(1);
+    const [transactionId, setTransactionId] = useState<string | null>(null);
 
-    function handleConfirm(){
-        setOpenDialogName("");
-    }
+    const handleInitiateTransaction = async () => {
+        if (senderUsername && receiver && sendAmount) {
+            try {
+                const response = await axios.post('http://localhost:8000/api/initiateTransaction', {
+                    senderUsername,
+                    receiverUsername: receiver,
+                    amount: sendAmount,
+                });
+
+                if (response.status === 200) {
+                    const { transactionFee, transactionId } = response.data;
+                    setTransactionId(transactionId); // Store transaction ID
+                    console.log('Transaction initiated:', transactionId, 'Transaction Fee:', transactionFee);
+                    setSendFlowPage(2); // Move to the confirmation page
+                } else {
+                    console.error('Error initiating transaction:', response.data);
+                }
+            } catch (error) {
+                console.error('Error initiating transaction:', error);
+            }
+        } else {
+            console.error('Missing required fields.');
+        }
+    };
+
+    const handleConfirm = async () => {
+        if (transactionId && senderUsername) {
+            try {
+                const response = await axios.post('http://localhost:8000/api/commitTransaction', {
+                    transactionId,
+                    senderUsername,
+                });
+
+                if (response.status === 200) {
+                    // Handle successful commit here, e.g., show success message
+                    console.log('Transaction committed successfully:', response.data);
+                } else {
+                    console.error('Error committing transaction:', response.data);
+                }
+            } catch (error) {
+                console.error('Error committing transaction:', error);
+            }
+        } else {
+            console.error('Missing transaction ID or sender username.');
+        }
+
+        setOpenDialogName(""); // Close the dialog after transaction attempt
+    };
 
     if (sendFlowPage == 1) {
         return (
@@ -42,8 +91,8 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
                 <div className="flex flex-col items-center space-x-2">
                 <div className="mid-section flex flex-col items-center justify-center flex-grow py-10 gap-10">
                     <div className="flex items-center border border-gray-300 rounded-lg p-1 w-full max-w-md text-base shadow-sm">
-                        <p className="ml-2 text-lg text-slate-400">@</p>
-                        <Input type="text" className="border-none outline-none shadow-none text-xl" value={handle} onChange={(e) => setHandle(e.target.value)}/>
+                        <p className="ml-2 text-lg text-slate-400">Reciever</p>
+                        <Input type="text" className="border-none outline-none shadow-none text-xl" value={receiver} onChange={(e) => setReceiver(e.target.value)}/>
                     </div>
                     <div className="flex items-center border border-gray-300 rounded-lg p-1 w-full max-w-md text-base shadow-sm">
                         <Image src="/near.webp" width={30} height={30} alt="Currency" />
@@ -59,7 +108,7 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
                 </div>
                 </div>
                 <DialogFooter className="flex justify-start">
-                    <Button type="button" className="" onClick={() => setSendFlowPage(2)}>
+                    <Button type="button" className="" onClick={handleInitiateTransaction}>
                         Continue
                     </Button>
                 </DialogFooter>
@@ -67,7 +116,7 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
         )
     }
 
-    if (sendFlowPage == 2){
+    if (sendFlowPage === 2) {
         return (
             <>
                 <div>
@@ -76,10 +125,9 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
                             <CardTitle className="text-xl">Summary</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p>Token: 2.5</p>
-                            <p>Reciever: @harsh</p>
-                            <p className="mt-3">Gas Fee: 0.01</p>
-                            <p className="mt-1 text-xs">Note: We need to split one of your wallets</p>
+                            <p>Token: {sendAmount}</p>
+                            <p>Receiver: {receiver}</p>
+                            <p className="mt-1 text-xs">Note: The actual transferred amount may differ due to transaction fees.</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -94,6 +142,6 @@ export default function SendDialog({ setOpenDialogName } : { setOpenDialogName: 
                     </Button>
                 </DialogFooter>
             </>
-        )
+        );
     } 
 }
