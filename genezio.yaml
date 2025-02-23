@@ -15,11 +15,5 @@ backend:
         local:
             - npm install
 name: Zap
-nextjs:
-    packageManager: npm
-    path: ./frontend/
-    scripts:
-        deploy:
-            - npm install
 region: us-east-1
 yamlVersion: 2
