@@ -161,6 +161,8 @@ export function getWalletsForTransfer(wallets, targetAmount) {
     let total = 0;
 
     for (let {wallet_id, amount} of sortedWallets) {
+        
+        if (parseFloat(amount) <= 0) continue;
         if (total >= targetAmount) break; // Stop once we reach/exceed the target
 
         selectedWallets.push(wallet_id);
