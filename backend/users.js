@@ -13,7 +13,7 @@ export async function getUser(userId){
 
 export async function getUserByUsername(username){
     const { data, error } = await supabase.from("user").select("*").eq("username", username).limit(1);
-    if (error) {
+    if (error || data.length === 0) {
         throw new Error(`Error getting user: ${error.message}`);
     }
     return data[0];

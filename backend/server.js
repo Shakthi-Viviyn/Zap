@@ -5,27 +5,53 @@ import morgan from 'morgan';
 import { createUser, getUserByUsername, getUserId } from './users.js';
 import { createWallet, getWalletsWithTotalAmt, getWalletBalanceFromChain } from './wallet.js';
 import { createTransaction, commitTransaction } from './transactions.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+// JWT middleware
+app.use((req, res, next) => {
+  if (req.path === "/api/create-user" || req.path === "/api/login" || req.path === "/api"){
+      next();
+      return;
+  }
+  let token = req.headers.authorization;
+  if (!token){
+      res.status(401).json({error: "JWT missing"});
+      return;
+  }
+  token = token.split(" ")[1];
+  console.log(token);
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err){
+          res.status(401).json({error: "invalid JWT"});
+          return;
+      }
+      req.body.username = decoded["username"];
+      next();
+  });
+});
+
 // Simple API route
 app.get("/api", (req, res) => {
-  res.send("Backend is running!");
+  res.send("Zap backend is running!");
 });
 
 app.post("/api/create-user", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const newUserId = await createUser(username, password);
-    const { walletId } = await createWallet(newUserId);
-    console.log(walletId);
+    const hash = await bcrypt.hash(password, 10);
+    const newUserId = await createUser(username, hash);
+    await createWallet(newUserId);
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
@@ -34,14 +60,18 @@ app.post("/api/create-user", async (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-  console.log(req.body);
   try {
     const user = await getUserByUsername(username);
-    console.log(user);
-    if (user.password !== password) {
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+
+    let hash = user.password;
+    let result = await bcrypt.compare(password, hash);
+    if (result){
+        let token = jwt.sign({username: username}, JWT_SECRET, {expiresIn: '1d'});
+        res.status(200).json(token);
+    }else{
+        res.status(401).json({error: "Username or password is incorrect"});
     }
-    return res.status(200).json({ success: true });
+
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
