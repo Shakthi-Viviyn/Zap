@@ -25,7 +25,7 @@ export default function Page() {
 
     async function handleAccountCreate(){
         
-        let resp = await axios.post(`http://localhost:8000/api/create-user`, accountInfo);
+        let resp = await axios.post(`${process.env.BACKEND_HOST}/api/create-user`, accountInfo);
         if (resp.status === 200){
             router.push(`/login`);
         }

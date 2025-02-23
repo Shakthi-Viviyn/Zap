@@ -33,7 +33,7 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
     const handleInitiateTransaction = async () => {
         if (senderUsername && receiver && sendAmount) {
             try {
-                const response = await axios.post('http://localhost:8000/api/initiateTransaction', {
+                const response = await axios.post(`${process.env.BACKEND_HOST}/api/initiateTransaction`, {
                     senderUsername,     
                     receiverUsername: receiver,
                     amount: sendAmount,  
@@ -60,7 +60,7 @@ export default function SendDialog({ setOpenDialogName, initialHandle } : { setO
     const handleConfirm = async () => {
         if (transactionId && senderUsername) {
             try {
-                const response = await axios.post('http://localhost:8000/api/commitTransaction', {
+                const response = await axios.post(`${process.env.BACKEND_HOST}/api/commitTransaction`, {
                     transactionId,
                     senderUsername,
                 });
