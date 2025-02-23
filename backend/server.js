@@ -2,9 +2,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { createUser, determineTransferDistribution, getUser, getUserByUsername, getUserId } from './users.js';
-import { createWallet, getWallets, refreshAllWallets } from './wallet.js';
-import { commitTransaction } from './transactions.js';
+import { createUser, getUserByUsername } from './users.js';
+import { createWallet, getWallets, getWalletBalanceFromChain } from './wallet.js';
+import { createTransaction, commitTransaction } from './transactions.js';
 
 dotenv.config();
 const app = express();
@@ -15,9 +15,8 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-
 // Simple API route
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("Backend is running!");
 });
 
@@ -25,7 +24,8 @@ app.post("/api/create-user", async (req, res) => {
   const { username, password } = req.body;
   try {
     const newUserId = await createUser(username, password);
-    await createWallet(newUserId);
+    const { walletId } = await createWallet(newUserId);
+    console.log(walletId);
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
@@ -34,8 +34,10 @@ app.post("/api/create-user", async (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
+  console.log(req.body);
   try {
     const user = await getUserByUsername(username);
+    console.log(user);
     if (user.password !== password) {
       return res.status(401).json({ success: false, error: "Invalid credentials" });
     }
@@ -45,12 +47,13 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.post("/initiateTransaction", async (req, res) => {
+app.post("/api/initiateTransaction", async (req, res) => {
   const { senderUsername, receiverUsername, amount } = req.body;
+  console.log(req.body);
   try {
     const senderUser = await getUserByUsername(senderUsername);
     const receiverUser = await getUserByUsername(receiverUsername);
-    const transactionId = determineTransferDistribution(senderUser.id, receiverUser.id, amount);
+    const transactionId = createTransaction(senderUser.id, receiverUser.id, amount);
 
     return res.status(200).json({ transactionFee: 0, transactionId});
   } catch (error) {
@@ -68,34 +71,35 @@ app.post("/api/commitTransaction", async (req, res) => {
   }
 });
 
+// Try to avoid this route unless necessary
 app.get("/api/totalBalanace", async (req, res) => {
   const { username } = req.body;
   try {
     const user = await getUserByUsername(username);
-    return res.status(200).json({ totalBalance: user.total_balance });
+    const { totalBalance } = await getWallets(user.id);
+    return res.status(200).json({ totalBalance: totalBalance });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
 
-app.get("/api/getAllWallets", async (req, res) => {
+app.get("/api/wallets", async (req, res) => {
   const { username } = req.body;
   try {
     const user = await getUserByUsername(username);
-    const wallets = await getWallets(user.id);
-    return res.status(200).json(wallets);
+    const { wallets, totalBalance } = await getWallets(user.id);
+    return res.status(200).json({wallets, totalBalance});
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
 
-app.get("/api/refreshAllWallets", async (req, res) => {
-  const { username } = req.body;
+app.get("/api/getWalletBalance", async (req, res) => {
   try {
-    const user = await getUserByUsername(username);
-    const newBalance = await refreshAllWallets(user.id);
-    return res.status(200).json({ wallets, newBalance });
-  } catch (error) {
+    const { walletId } = req.body;
+    const balance = await getWalletBalanceFromChain(walletId);
+    return res.status(200).json({ walletId, balance });
+  }catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });

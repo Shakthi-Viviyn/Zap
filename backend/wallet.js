@@ -1,6 +1,7 @@
 import { connect, keyStores, KeyPair, utils } from "near-api-js";
 import dotenv from "dotenv";
 import supabase from "./database/client.js";
+import Decimal from "decimal.js";
 
 dotenv.config();
 
@@ -43,7 +44,7 @@ export async function createWallet(userId) {
           new_account_id: newWalletId, // example-account.testnet
           new_public_key: newPublicKey, // ed25519:2ASWc...
         },
-        attachedDeposit: utils.format.parseNearAmount("0.0"), // Initial empty balance for account in yoctoNEAR
+        attachedDeposit: utils.format.parseNearAmount("0"), // Initial empty balance for account in yoctoNEAR
     });
     
     if (createWalletResult.status.SuccessValue) {
@@ -61,7 +62,6 @@ export async function createWallet(userId) {
             throw new Error(`Error creating wallet: ${error.message}`);
         }
         return {
-            userId,
             walletId: newWalletId,
             publicKey: newPublicKey
         };
@@ -69,43 +69,45 @@ export async function createWallet(userId) {
     return null;
 }
 
-export async function getWallets(userId, limit = 10, offset = 0) {
+export async function getWallets(userId) {
 
     let { error, data } = await supabase.from("wallet")
-    .select("wallet_id, amount")
-    .eq("user_id", userId)
+        .select("wallet_id")
+        .eq("user_id", userId)
 
     if (error){
         throw new Error(`Error getting wallets: ${error.message}`);
     }
-    return data;
+    return fetchWalletBalances(data);;
+}
+
+function cleanNearAmount(amount) {
+    if (amount.includes('-')) {
+        return '0'
+    }
+    return amount
 }
 
 /* returns balance of a single wallet as a float number */
 export async function getWalletBalanceFromChain(walletId) {
     const wallet = await storeLessConnection.account(walletId);
-    const { total } = await wallet.getAccountBalance();
-    return parseFloat(total);
+    const nearAmount = utils.format.formatNearAmount((await wallet.getAccountBalance()).available);
+    return cleanNearAmount(nearAmount);
 }
 
 /* returns the new total balance after syncing blockchain balances of all wallets belonging to user down to the DB */
-export async function refreshAllWallets(userId){
-    const wallets = await getWallets(userId);
-    let newBalance = 0;
-    await Promise.all(wallets.map(async (wallet) => {
+export async function fetchWalletBalances(wallets){
+    let totalBalance = new Decimal(0)
+    wallets = await Promise.all(wallets.map(async (wallet) => {
             const balance = await getWalletBalanceFromChain(wallet.wallet_id);
-            const { error } =  await supabase.from("wallet").update({ amount: balance }).eq("wallet_id", wallet.wallet_id);
-            if (error) {
-                throw new Error(`Error updating wallet: ${error.message}`);
+            totalBalance = totalBalance.plus(balance);
+            return {
+                wallet_id: wallet.wallet_id,
+                amount: balance
             }
-            newBalance += balance;
         }
     ));
-    const { error } = await supabase.from("user").update({ total_amount: newBalance }).eq("id", userId);
-    if (error) {
-        throw new Error(`Error updating user: ${error.message}`);
-    }
-    return newBalance;
+    return { wallets, totalBalance };
 }
 
 export async function splitWallet(walletId, difference) {
@@ -118,7 +120,6 @@ export async function splitWallet(walletId, difference) {
 
     const wallet = data[0];
     const userId = wallet.user_id;
-    const newAmount = wallet.amount - difference;
 
     const keyPair = KeyPair.fromString(wallet.private_key);
     await myKeyStore.setKey("testnet", walletId, keyPair);
@@ -140,21 +141,24 @@ export async function splitWallet(walletId, difference) {
     );
 
     if (sendTokensResult.transaction_outcome.outcome.status.SuccessValue) {
-        await supabase.from("wallet").update({ amount: newAmount }).eq("wallet_id", walletId);
-        await supabase.from("wallet").insert(
-            {
-                user_id: userId,
-                private_key: newUserWallet.private_key,
-                public_key: newUserWallet.public_key,
-                wallet_id: newUserWallet.wallet_id,
-                amount: difference
-            }
-        );
-        if (error) {
-            throw new Error(`Error splitting wallet: ${error.message}`);
-        }
         return "Success";
     }
     throw new Error(`Error splitting wallet: ${sendTokensResult.transaction_outcome.outcome.status.FailureValue}`);
+}
+
+export function getWalletsForTransfer(wallets, targetAmount) {
+    // Convert object to array of [wallet_id, balance] pairs and sort by balance (smallest to largest)
+    let sortedWallets = wallets.sort((a, b) => a.amount - b.amount);
+    let selectedWallets = [];
+    let total = 0;
+
+    for (let {wallet_id, amount} of sortedWallets) {
+        if (total >= targetAmount) break; // Stop once we reach/exceed the target
+
+        selectedWallets.push(wallet_id);
+        total += amount;
+    }
+
+    return { wallets: selectedWallets, walletSum: total };
 }
 
