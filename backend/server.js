@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { createAccount, determineTransferDistribution } from './accounts.js';
+import { createAccount, determineTransferDistribution, getAccountId } from './accounts.js';
 import { createWallet } from './wallet.js';
 
 dotenv.config();
@@ -34,9 +34,11 @@ app.post("/create-account", async (req, res) => {
 });
 
 app.post("/transfer", async (req, res) => {
-  const { sender, reciever, amount } = req.body;
+  const { sender, receiver, amount } = req.body;
   try {
-    const transactionFee = determineTransferDistribution(sender, reciever, amount);
+    const senderId = await getAccountId(sender);
+    const receiverId = await getAccountId(receiver);
+    const transactionFee = determineTransferDistribution(senderId.id, receiverId.id, amount);
 
     return res.status(200).json({ success: true, transactionFee});
   } catch (error) {
