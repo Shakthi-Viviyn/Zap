@@ -48,7 +48,7 @@ export default function MainPage() {
     // Fetch wallet data from the /api/wallets endpoint
     const fetchWallets = async () => {
       try {
-        const resp = await axios.get(`${process.env.BACKEND_HOST}/api/wallets`, {headers: getAuth()});
+        const resp = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/wallets`, {headers: getAuth()});
         if (resp.status === 200) {
           setWallets(resp.data.wallets);  // Assuming response contains an array of wallets
           setTotalBalance(resp.data.totalBalance); // Assuming response contains the total balance

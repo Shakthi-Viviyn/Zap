@@ -24,7 +24,7 @@ export default function Page() {
     });
 
     async function handleLogin(){
-        let resp = await axios.post(`${process.env.BACKEND_HOST}/api/login`, loginInfo);
+        let resp = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/login`, loginInfo);
         if (resp.status === 200){
             localStorage.setItem('token', resp.data);
             localStorage.setItem('username', loginInfo.username);
