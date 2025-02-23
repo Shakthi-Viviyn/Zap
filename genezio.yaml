@@ -14,7 +14,7 @@ backend:
             - npm install
         local:
             - npm install
-name: Zap-2
+name: Zap
 nextjs:
     packageManager: npm
     path: ./frontend/
