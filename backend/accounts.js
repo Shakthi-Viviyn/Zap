@@ -36,7 +36,6 @@ export async function determineTransferDistribution(senderId, targetAmount) {
     }
 
     let wallet_data = await getWallets(senderId, 0);
-    console.log(wallet_data);
     let {wallets, walletSum} = get_wallets_for_transfer(wallet_data, targetAmount);
     let difference = walletSum - targetAmount;
 
@@ -65,7 +64,6 @@ async function getAmount(senderId) {
 function get_wallets_for_transfer(wallets, targetAmount) {
     // Convert object to array of [account_id, balance] pairs and sort by balance (smallest to largest)
     let sortedWallets = wallets.sort((a, b) => a.amount - b.amount);
-
     let selectedWallets = [];
     let total = 0;
 
@@ -76,7 +74,7 @@ function get_wallets_for_transfer(wallets, targetAmount) {
         total += amount;
     }
 
-    return { wallets: selectedWallets, total };
+    return { wallets: selectedWallets, walletSum: total };
 }
 
 
