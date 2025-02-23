@@ -6,19 +6,23 @@ import { getWallets, splitWallet } from "./wallet.js";
 export async function getAccount(userId){
     const { data, error } = await supabase.from("account").select("*").eq("user_id", userId).limit(1);
     if (error) {
-        return null;
-    } else {
-        return data[0];
+        throw new Error(`Error getting account: ${error.message}`);
     }
+    return data[0];
 }
 
-export async function createAccount({ firstname, lastname, username, email, password }) {
+export async function getAccountByUsername(username){
+    const { data, error } = await supabase.from("account").select("*").eq("username", username).limit(1);
+    if (error) {
+        throw new Error(`Error getting account: ${error.message}`);
+    }
+    return data[0];
+}
+
+export async function createAccount(username, password) {
     const {data, error} = await supabase.from("account").insert(
         {
-            first_name: firstname,
-            last_name: lastname,
             username: username,
-            email: email,
             password: password
         }
     ).select("id");
@@ -26,7 +30,7 @@ export async function createAccount({ firstname, lastname, username, email, pass
     if (error) {
         throw new Error(`Error creating account: ${error.message}`);
     }
-    return data[0];
+    return data.id;
 }
 
 export async function determineTransferDistribution(senderId, receiverId, targetAmount) {
@@ -53,7 +57,7 @@ export async function determineTransferDistribution(senderId, receiverId, target
     if (error) {
         throw new Error(`Error occured: ${error.message}`);
     }
-    return data[0];
+    return data[0].id;
 }
 
 async function getAmount(senderId) {
