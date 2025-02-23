@@ -62,16 +62,16 @@ export async function createWallet(accountId) {
 export async function getWallets(accountId, limit = 10, offset = 0) {
 
     let result;
-    if (limit == 0){
+    if (limit != 0){
         result = await supabase.from("wallet")
-        .select("*")
-        .eq("user_id", accountId)
+        .select({wallet_id, amount})
+        .eq("account_id", accountId)
         .limit(limit)
         .offset(offset);
-    }else{
+    } else {
         result = await supabase.from("wallet")
-        .select("*")
-        .eq("user_id", accountId)
+        .select({wallet_id, amount})
+        .eq("account_id", accountId)
     }
     
     if (result.error) {
@@ -80,5 +80,9 @@ export async function getWallets(accountId, limit = 10, offset = 0) {
         return result.data;
     }
 
+}
+
+export async function splitWallet(walletId, difference) {
+    
 }
 
