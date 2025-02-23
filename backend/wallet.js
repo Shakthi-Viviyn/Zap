@@ -61,6 +61,7 @@ export async function createWallet(userId) {
             throw new Error(`Error creating wallet: ${error.message}`);
         }
     }
+    return "Success";
 }
 
 export async function getWalletsWithTotalAmt(userId) {
@@ -113,6 +114,8 @@ export async function splitWallet(walletId, difference) {
 
     const { data, error } = await supabase.from("wallet").select("*").eq("wallet_id", walletId);
 
+    console.log(data);
+    console.log("-----------------");
     if (error) {
         throw new Error(`Error getting wallet keys for splitting: ${error.message}`);
     }
@@ -128,7 +131,13 @@ export async function splitWallet(walletId, difference) {
 
     const userWallet = await nearConnection.account(walletId);
 
+    console.log(userWallet);
+    console.log("-----------------");
+
     const newUserWallet = await createWallet(userId);
+
+    console.log(newUserWallet);
+    console.log("-----------------");
 
     if (newUserWallet == null) {
         throw new Error(`Error creating new wallet.`);
@@ -139,7 +148,7 @@ export async function splitWallet(walletId, difference) {
         newUserWallet.walletId, // Receiver wallet ID
         utils.format.parseNearAmount(difference.toString()), // Amount being sent in yoctoNEAR
     );
-
+    console.log(sendTokensResult);
     if ("SuccessValue" in sendTokensResult.status) return;
     
     throw new Error(`Error splitting wallet: ${sendTokensResult.transaction_outcome.outcome.status.FailureValue}`);
