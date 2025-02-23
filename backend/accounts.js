@@ -35,7 +35,8 @@ export async function determineTransferDistribution(senderId, targetAmount) {
         throw new Error(`Insufficient funds in account.`);
     }
 
-    let wallet_data = getWallets(senderId);
+    let wallet_data = await getWallets(senderId, 0);
+    console.log(wallet_data);
     let {wallets, walletSum} = get_wallets_for_transfer(wallet_data, targetAmount);
     let difference = walletSum - targetAmount;
 
@@ -54,7 +55,7 @@ export async function determineTransferDistribution(senderId, targetAmount) {
 }
 
 async function getAmount(senderId) {
-    const {data, error} = await supabase.from("account").select({total_amount}).eq("id", senderId);
+    const {data, error} = await supabase.from("account").select("total_amount").eq("id", senderId);
     if (error) {
         throw new Error(`Error creating account: ${error.message}`);
     }

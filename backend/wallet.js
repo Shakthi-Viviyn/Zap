@@ -64,13 +64,13 @@ export async function getWallets(accountId, limit = 10, offset = 0) {
     let result;
     if (limit != 0){
         result = await supabase.from("wallet")
-        .select({wallet_id, amount})
+        .select("wallet_id, amount")
         .eq("account_id", accountId)
         .limit(limit)
         .offset(offset);
     } else {
         result = await supabase.from("wallet")
-        .select({wallet_id, amount})
+        .select("wallet_id, amount")
         .eq("account_id", accountId)
     }
     
