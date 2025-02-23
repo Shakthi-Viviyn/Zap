@@ -15,7 +15,7 @@ export default function Home() {
           to<span className="text-blue-600"> Zap!</span>
         </h1>
         <p className="text-lg text-gray-600 mt-4 drop-shadow-sm">
-          Making your crypt easier.
+          Making your crypto easier.
         </p>
       </div>
 
