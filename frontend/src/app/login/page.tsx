@@ -26,6 +26,7 @@ export default function Page() {
     async function handleLogin(){
         let resp = await axios.post(`http://localhost:8000/api/login`, loginInfo);
         if (resp.status === 200){
+            localStorage.setItem('token', resp.data);
             router.push("/main");
             return;
         }
