@@ -41,6 +41,13 @@ app.use((req, res, next) => {
   });
 });
 
+function cleanUsername(username) {
+  if (username.startsWith('@')) {
+    return username.slice(1);
+  }
+  return username;
+}
+
 // Simple API route
 app.get("/api", (req, res) => {
   res.send("Zap backend is running!");
@@ -78,9 +85,9 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.post("/api/initiateTransaction", async (req, res) => {
-  const { senderUsername, receiverUsername, amount } = req.body;
-  console.log(req.body);
+  let { senderUsername, receiverUsername, amount } = req.body;
   try {
+    receiverUsername = cleanUsername(receiverUsername);
     const senderUser = await getUserByUsername(senderUsername);
     const receiverUser = await getUserByUsername(receiverUsername);
     const result = await createTransaction(senderUser.id, receiverUser.id, amount);
